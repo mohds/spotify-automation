@@ -26,3 +26,6 @@ node app.js
 ```
 7. Browse to http://localhost:8888/
 8. Enjoy
+
+# Security Disclaimer
+This is not meant to be a secure program. There are vulnerabilities associated with NodeJS and npm packages. Use this program on your own risk. Best security practices were not followed. Code contains dummy tokens.
