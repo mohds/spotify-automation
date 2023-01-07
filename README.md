@@ -28,4 +28,4 @@ node app.js
 8. Enjoy
 
 # Security Disclaimer
-This is not meant to be a secure program. There are vulnerabilities associated with NodeJS and npm packages. Use this program on your own risk. Best security practices were not followed. Code contains dummy tokens.
+This is not meant to be a secure program. There are vulnerabilities associated with NodeJS and npm packages. Use this program on your own risk. Best security practices were not followed. Security best-practices were not followed when writing this code. Never leave your secret tokens in your own code. This code contains dummy tokens.
