@@ -8,19 +8,19 @@ An spotify automation tool using Spotify's official API
 ```
 git clone https://github.com/mohds/spotify-automation.git`
 ```
-3. Change directory into repository
+3. Change directory into repository:
 ```
 cd spotify-automation
 ```
-4. Install modules
+4. Install the required modules:
 ```
 npm install
 ```
-5. Change directory into spotify-automatic-player
+5. Change directory into spotify-automatic-player:
 ```
 cd spotify-automatic-player
 ```
-6. Run the program
+6. Run the program:
 ```
 node app.js
 ```
