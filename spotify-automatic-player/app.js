@@ -1,0 +1,380 @@
+/**
+ * This is an example of a basic node.js script that performs
+ * the Authorization Code oAuth2 flow to authenticate against
+ * the Spotify Accounts.
+ *
+ * For more information, read
+ * https://developer.spotify.com/web-api/authorization-guide/#authorization_code_flow
+ */
+
+var express = require('express'); // Express web server framework
+var request = require('request'); // "Request" library
+var cors = require('cors');
+var querystring = require('querystring');
+var cookieParser = require('cookie-parser');
+const schedule = require('node-schedule');
+
+
+var client_id = '32595bce5aa94527b94a05b83594ce5a'; // Your client id
+var client_secret = 'a05fa212a5c54c6eada4a0b2a8ad029c'; // Your secret
+var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+
+var morning_hour = 6;
+var evening_hour = 17;
+//var redirect_uri = 'http://localhost:8888/autoplay'; // Your redirect uri
+
+const job = schedule.scheduleJob('* * * * * *', function () {
+//    play_morning_playlist();
+});
+
+function play_morning_playlist(code) {
+  var authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      form: {
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      },
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+      },
+      json: true
+    };
+
+  request.put(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200 || 1==1) {
+        var access_token = body.access_token,
+            refresh_token = body.refresh_token;
+        var options = {
+          url: 'https://api.spotify.com/v1/me/player/play',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true,
+      body: {
+            "context_uri": "spotify:album:5ht7ItJgpBH7W6vJ5BqpPr",
+            "offset": {
+                    "position": 5
+                  },
+            "position_ms": 0
+      }
+        };
+
+        // use the access token to access the Spotify Web API
+        request.put(options, function(error, response, body) {
+          console.log(body);
+        });
+
+      } else {
+    console.log("Error");
+      }
+  });
+}
+
+
+/**
+ * Generates a random string containing numbers and letters
+ * @param  {number} length The length of the string
+ * @return {string} The generated string
+ */
+var generateRandomString = function(length) {
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (var i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
+
+var stateKey = 'spotify_auth_state';
+
+var app = express();
+
+app.use(express.static(__dirname + '/public'))
+   .use(cors())
+   .use(cookieParser());
+
+app.get('/login', function(req, res) {
+
+  var state = generateRandomString(16);
+  res.cookie(stateKey, state);
+
+  // your application requests authorization
+  var scope = 'user-read-private user-read-email user-modify-playback-state user-read-playback-state playlist-read-private';
+  //var scope = 'user-read-private user-read-email';
+  res.redirect('https://accounts.spotify.com/authorize?' +
+    querystring.stringify({
+      response_type: 'code',
+      client_id: client_id,
+      scope: scope,
+      redirect_uri: redirect_uri,
+      state: state
+    }));
+});
+
+
+app.get('/autoplay', function(req, res) {
+
+  // your application requests refresh and access tokens
+  // after checking the state parameter
+
+  var code = req.query.code || null;
+  var state = req.query.state || null;
+  var storedState = req.cookies ? req.cookies[stateKey] : null;
+
+  if (state === null || state !== storedState) {
+    res.redirect('/#' +
+      querystring.stringify({
+        error: 'state_mismatch'
+      }));
+  } else {
+    res.clearCookie(stateKey);
+    var authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      form: {
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      },
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+      },
+      json: true
+    };
+
+    request.get(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200) {
+
+        var access_token = body.access_token,
+            refresh_token = body.refresh_token;
+
+        var options = {
+          url: 'https://api.spotify.com/v1/me/player/devices',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+
+        // use the access token to access the Spotify Web API
+        request.get(options, function(error, response, body) {
+          //console.log(body);
+        });
+
+        // we can also pass the token to the browser to make requests from there
+        res.redirect('/#' +
+          querystring.stringify({
+            access_token: access_token,
+            refresh_token: refresh_token
+          }));
+      } else {
+        res.redirect('/#' +
+          querystring.stringify({
+            error: 'invalid_token'
+          }));
+      }
+    });
+  }
+});
+
+app.get('/callback', function(req, res, iteration) {
+  
+  // your application requests refresh and access tokens
+  // after checking the state parameter
+
+  var code = req.query.code || null;
+  var state = req.query.state || null;
+  var storedState = req.cookies ? req.cookies[stateKey] : null;
+
+  if (state === null || state !== storedState) {
+    res.redirect('/#' +
+      querystring.stringify({
+        error: 'state_mismatch'
+      }));
+  } else {
+    res.clearCookie(stateKey);
+    var authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      form: {
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      },
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+      },
+      json: true
+    };
+
+    request.post(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200) {
+
+        var access_token = body.access_token,
+            refresh_token = body.refresh_token;
+
+        var options = {
+          url: 'https://api.spotify.com/v1/me',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+        // Spotify me
+        mainloop(options, access_token);
+
+        // we can also pass the token to the browser to make requests from there
+        //res.redirect('/#' +
+          //querystring.stringify({
+          //  access_token: access_token,
+          //  refresh_token: refresh_token
+          //}));
+      } else {
+        res.redirect('/#' +
+          querystring.stringify({
+           error: 'invalid_token'
+          }));
+      }
+    });
+  }
+});
+
+function mainloop(options, access_token) {
+    setTimeout(() => {
+   
+        request.get(options, function(error, response, body) {
+
+            var current_time = new Date();
+            var current_hour = current_time.getHours();
+             
+            console.log("Program is running...");
+            console.log("Morning hour: " + morning_hour);
+            console.log("Evening hour: " + evening_hour);
+            console.log("Current hour: " + current_hour);
+
+            // debugging
+            //console.log(body);
+
+            // get player state
+            var is_playing = false;
+            var playlist_playing = '';
+            options = {
+              url: 'https://api.spotify.com/v1/me/player',
+              headers: { 'Authorization': 'Bearer ' + access_token },
+              json: true,
+            };
+            request.get(options, function(error, response, body) {
+                //console.log("Player state:");
+                //console.log(body);
+                is_playing = body.is_playing;
+                console.log("Is playing: " + is_playing);
+                if(is_playing) {
+                    playlist_playing = body.context.uri;
+                    console.log("Playlist playing: " + playlist_playing);
+                }
+
+                options = {
+                  url: 'https://api.spotify.com/v1/me/playlists',
+                  headers: { 'Authorization': 'Bearer ' + access_token },
+                  json: true,
+                };
+                //console.log(options)
+                // use the access token to access the Spotify Web API
+
+                // get playlists
+                request.get(options, function(error, response, body) {
+
+                    // debugging
+                    //console.log("Playlists:")
+                    //console.log(body);
+
+
+                    playlists = body.items;
+                    var evening_playlist_id = "";
+                    var morning_playlist_id = "";
+                    for(var i = 0 ; i < playlists.length; i++) {
+                        if(playlists[i].name == "evening-playlist") {
+                            evening_playlist_id = playlists[i].uri;
+                            console.log("Evening playlist: " + evening_playlist_id);
+                        }
+                        else if(playlists[i].name == "morning-playlist") {
+                            morning_playlist_id = playlists[i].uri;
+                            console.log("Morning playlist: " + morning_playlist_id);
+                        }
+                    }
+
+                    var playlist_to_play = "";
+                    if(current_hour >= morning_hour && current_hour < evening_hour) {
+                        playlist_to_play = morning_playlist_id;
+                        console.log("Current time period: Morning");
+                    }
+                    else {
+                        playlist_to_play = evening_playlist_id;
+                        console.log("Current time period: Evening");
+                    }
+
+                    // get devices
+                    var device_id = ''
+                    var options = {
+                          url: 'https://api.spotify.com/v1/me/player/devices',
+                          headers: { 'Authorization': 'Bearer ' + access_token },
+                          json: true
+                    };
+                    request.get(options, function(error, response, body) {
+                        //console.log("Devices:");
+                        //console.log(body);
+                        device_id = body.devices[0].id;
+                        console.log("Device ID: " + device_id);
+                        console.log("Playlist ID: " + playlist_to_play);
+                        var options = {
+                              url: 'https://api.spotify.com/v1/me/player/play?device_id=' + device_id,
+                              headers: { 'Authorization': 'Bearer ' + access_token },
+                              json: true,
+                              body: {
+                                  "context_uri": playlist_to_play,
+                                  "position_ms": 0
+                              }
+                        };
+
+                        if(!is_playing || playlist_playing != playlist_to_play) {
+                            // play music
+                            request.put(options, function(error, response, body) {
+                                console.log("Playing...");
+                                console.log(body);
+                            });
+                        }
+                    });
+                });
+            });
+
+        });
+
+    console.log("");
+    mainloop(options, access_token);
+    },10000)
+}
+
+app.get('/refresh_token', function(req, res) {
+
+  // requesting access token from refresh token
+  var refresh_token = req.query.refresh_token;
+  var authOptions = {
+    url: 'https://accounts.spotify.com/api/token',
+    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
+    form: {
+      grant_type: 'refresh_token',
+      refresh_token: refresh_token
+    },
+    json: true
+  };
+
+  request.post(authOptions, function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+      var access_token = body.access_token;
+      res.send({
+        'access_token': access_token
+      });
+    }
+  });
+});
+
+app.get('/autoplaylist', function(req, res){
+  
+});
+
+console.log('Listening on 8888');
+app.listen(8888);
