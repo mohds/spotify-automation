@@ -258,13 +258,15 @@ function mainloop(options, access_token) {
               json: true,
             };
             request.get(options, function(error, response, body) {
-                //console.log("Player state:");
-                //console.log(body);
-                is_playing = body.is_playing;
-                console.log("Is playing: " + is_playing);
-                if(is_playing) {
-                    playlist_playing = body.context.uri;
-                    console.log("Playlist playing: " + playlist_playing);
+                if(body != undefined) {
+                    //console.log("Player state:");
+                    //console.log(body);
+                    is_playing = body.is_playing;
+                    console.log("Is playing: " + is_playing);
+                    if(is_playing) {
+                        playlist_playing = body.context.uri;
+                        console.log("Playlist playing: " + playlist_playing);
+                    }
                 }
 
                 options = {
