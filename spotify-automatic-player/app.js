@@ -15,8 +15,8 @@ var cookieParser = require('cookie-parser');
 const schedule = require('node-schedule');
 
 
-var client_id = '32595bce5aa94527b94a05b83594ce5a'; // Your client id
-var client_secret = 'a05fa212a5c54c6eada4a0b2a8ad029c'; // Your secret
+var client_id = process.env.CLIENT_ID; // Your client id
+var client_secret = process.env.CLIENT_SECRET; // Your secret
 var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
 
 var morning_hour = 6;
