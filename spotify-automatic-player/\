@@ -70,6 +70,69 @@ app.get('/login', function(req, res) {
     }));
 });
 
+
+app.get('/autoplay', function(req, res) {
+
+  // your application requests refresh and access tokens
+  // after checking the state parameter
+
+  var code = req.query.code || null;
+  var state = req.query.state || null;
+  var storedState = req.cookies ? req.cookies[stateKey] : null;
+
+  if (state === null || state !== storedState) {
+    res.redirect('/#' +
+      querystring.stringify({
+        error: 'state_mismatch'
+      }));
+  } else {
+    res.clearCookie(stateKey);
+    var authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      form: {
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      },
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+      },
+      json: true
+    };
+
+    request.get(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200) {
+
+        var access_token = body.access_token,
+            refresh_token = body.refresh_token;
+
+        var options = {
+          url: 'https://api.spotify.com/v1/me/player/devices',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+
+        // use the access token to access the Spotify Web API
+        request.get(options, function(error, response, body) {
+          //console.log(body);
+        });
+
+        // we can also pass the token to the browser to make requests from there
+        res.redirect('/#' +
+          querystring.stringify({
+            access_token: access_token,
+            refresh_token: refresh_token
+          }));
+      } else {
+        res.redirect('/#' +
+          querystring.stringify({
+            error: 'invalid_token'
+          }));
+      }
+    });
+  }
+});
+
 app.get('/callback', function(req, res, iteration) {
   
   // your application requests refresh and access tokens
@@ -110,7 +173,7 @@ app.get('/callback', function(req, res, iteration) {
           headers: { 'Authorization': 'Bearer ' + access_token },
           json: true
         };
-
+        // Spotify me
         mainloop(options, access_token);
 
         // we can also pass the token to the browser to make requests from there
@@ -180,81 +243,68 @@ function mainloop(options, access_token) {
                     //console.log("Playlists:")
                     //console.log(body);
 
+
                     playlists = body.items;
                     var evening_playlist_id = "";
                     var morning_playlist_id = "";
-                    var night_playlist_id = "";
-                    if(playlists.length > 0) {
-                        for(var i = 0 ; i < playlists.length; i++) {
-                            if(playlists[i].name == evening_playlist_name) {
-                                evening_playlist_id = playlists[i].uri;
-                                console.log("Evening playlist: " + evening_playlist_id);
-                            }
-                            else if(playlists[i].name == night_playlist_name) {
-                                night_playlist_id = playlists[i].uri;
-                                console.log("Night playlist: " + night_playlist_id);
-                            }
-                            else if(playlists[i].name == morning_playlist_name){
-                                morning_playlist_id = playlists[i].uri;
-                                console.log("Morning playlist: " + morning_playlist_id);
-                            }
+                    for(var i = 0 ; i < playlists.length; i++) {
+                        if(playlists[i].name == evening_playlist_name) {
+                            evening_playlist_id = playlists[i].uri;
+                            console.log("Evening playlist: " + evening_playlist_id);
                         }
-
-                        var playlist_to_play = "";
-                        if(current_hour >= morning_hour && current_hour < evening_hour) {
-                            playlist_to_play = morning_playlist_id;
-                            console.log("Current time period: Morning");
+                        else if(playlists[i].name == "morning-playlist") {
+                            morning_playlist_id = playlists[i].uri;
+                            console.log("Morning playlist: " + morning_playlist_id);
                         }
-                        else if(current_hour >= evening_hour && current_hour < night_hour){
-                            playlist_to_play = evening_playlist_id;
-                            console.log("Current time period: Evening");
-                        }
-                        else {
-                            playlist_to_play = night_playlist_id;
-                            console.log("Current time period: Night");
-                        }
+                    }
 
-                        // get devices
-                        var device_id = ''
-                        var options = {
-                              url: 'https://api.spotify.com/v1/me/player/devices',
-                              headers: { 'Authorization': 'Bearer ' + access_token },
-                              json: true
-                        };
-                        request.get(options, function(error, response, body) {
-                            //console.log("Devices:");
-                            //console.log(body);
-
-                            if(body.devices.length > 0) {
-                                device_id = body.devices[0].id;
-                                console.log("Device ID: " + device_id);
-                                console.log("Playlist ID: " + playlist_to_play);
-                                var options = {
-                                      url: 'https://api.spotify.com/v1/me/player/play?device_id=' + device_id,
-                                      headers: { 'Authorization': 'Bearer ' + access_token },
-                                      json: true,
-                                      body: {
-                                          "context_uri": playlist_to_play,
-                                          "position_ms": 0
-                                      }
-                                };
-
-                                if(!is_playing || playlist_playing != playlist_to_play) {
-                                    // play music
-                                    request.put(options, function(error, response, body) {
-                                        console.log("Playing...");
-                                        console.log(body);
-                                    });
-                                }
-                            }
-                            else {
-                                console.log("No device found, make sure that a device is running spotify");
-                            }
-                        });
+                    var playlist_to_play = "";
+                    if(current_hour >= morning_hour && current_hour < evening_hour) {
+                        playlist_to_play = morning_playlist_id;
+                        console.log("Current time period: Morning");
                     }
                     else {
-                        console.log("No playlists found");
+                        playlist_to_play = evening_playlist_id;
+                        console.log("Current time period: Evening");
                     }
+
+                    // get devices
+                    var device_id = ''
+                    var options = {
+                          url: 'https://api.spotify.com/v1/me/player/devices',
+                          headers: { 'Authorization': 'Bearer ' + access_token },
+                          json: true
+                    };
+                    request.get(options, function(error, response, body) {
+                        //console.log("Devices:");
+                        //console.log(body);
+
+                        if(body.devices.length > 0) {
+                            device_id = body.devices[0].id;
+                            console.log("Device ID: " + device_id);
+                            console.log("Playlist ID: " + playlist_to_play);
+                            var options = {
+                                  url: 'https://api.spotify.com/v1/me/player/play?device_id=' + device_id,
+                                  headers: { 'Authorization': 'Bearer ' + access_token },
+                                  json: true,
+                                  body: {
+                                      "context_uri": playlist_to_play,
+                                      "position_ms": 0
+                                  }
+                            };
+
+                            if(!is_playing || playlist_playing != playlist_to_play) {
+                                // play music
+                                request.put(options, function(error, response, body) {
+                                    console.log("Playing...");
+                                    console.log(body);
+                                });
+                            }
+                        }
+                        else {
+                            console.log("No device found, make sure that a device is running spotify");
+                        }
+                    });
                 });
             });
 
@@ -287,6 +337,10 @@ app.get('/refresh_token', function(req, res) {
       });
     }
   });
+});
+
+app.get('/autoplaylist', function(req, res){
+  
 });
 
 console.log('Listening on 8888');

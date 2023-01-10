@@ -1,0 +1,20 @@
+{
+"time-period" : 
+	{
+		"morning": 
+		{
+			"hour": 7,
+			"playlist-name": "morning-playlist"
+		},
+		"evening": 
+		{
+			"hour": 12,
+			"playlist-name": "evening-playlist"
+		},
+		"night": 
+		{
+			"hour": 19,
+			"playlist-name": "night-playlist"
+		}
+	}
+}
