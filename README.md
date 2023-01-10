@@ -6,7 +6,7 @@ An spotify automation tool using Spotify's official API
 1. Install [NodeJS](https://nodejs.org/en/)
 2. Clone the repository:
 ```
-git clone https://github.com/mohds/spotify-automation.git`
+git clone https://github.com/mohds/spotify-automation.git
 ```
 3. Change directory into repository:
 ```
