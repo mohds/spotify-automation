@@ -233,7 +233,10 @@ function mainloop(options, access_token) {
                                 console.log("Devices:");
                                     console.log(body);
                             }
-                            if(typeof body.devices === 'undefined') {
+                            if(typeof body === 'undefined') {
+                                console.log("undefined devices response");
+                            }
+                            else if(typeof body.devices === 'undefined') {
                                 console.log(body);
                             }
                             else if(body.devices.length > 0) {
