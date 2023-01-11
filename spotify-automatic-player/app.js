@@ -28,6 +28,7 @@ var night_hour = config.get('time-period.night.hour');
 var night_playlist_name = config.get('time-period.night.playlist-name');
 var player_device_name = config.get('device-name');
 var player_device_type = config.get('device-type');
+var debugging = config.get('debugging');
 
 //var redirect_uri = 'http://localhost:8888/autoplay'; // Your redirect uri
 
@@ -228,9 +229,10 @@ function mainloop(options, access_token) {
                               json: true
                         };
                         request.get(options, function(error, response, body) {
-                            //console.log("Devices:");
-                            console.log(body);
-
+                            if(debugging) {
+                                console.log("Devices:");
+                                    console.log(body);
+                            }
                             if(typeof body.devices === 'undefined') {
                                 console.log(body);
                             }

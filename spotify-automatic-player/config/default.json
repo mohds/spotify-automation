@@ -18,5 +18,6 @@
 		}
 	},
 "device-name": "CFL-MSALLOUM",
-"device-type": "Computer"
+"device-type": "Computer",
+"debugging": true
 }
