@@ -26,6 +26,8 @@ var evening_hour = config.get('time-period.evening.hour');
 var evening_playlist_name = config.get('time-period.evening.playlist-name');
 var night_hour = config.get('time-period.night.hour');
 var night_playlist_name = config.get('time-period.night.playlist-name');
+var player_device_name = config.get('device-name');
+var player_device_type = config.get('device-type');
 
 //var redirect_uri = 'http://localhost:8888/autoplay'; // Your redirect uri
 
@@ -140,8 +142,11 @@ function mainloop(options, access_token) {
             console.log("Program is running...");
             console.log("Morning hour: " + morning_hour);
             console.log("Evening hour: " + evening_hour);
-	    console.log("Night hour: " + night_hour);
+	        console.log("Night hour: " + night_hour);
             console.log("Current hour: " + current_hour);
+
+            console.log("Device name to play on: " + player_device_name);
+            console.log("Device type to play on: " + player_device_type);
 
             // debugging
             //console.log(body);
@@ -230,7 +235,13 @@ function mainloop(options, access_token) {
                                 console.log(body);
                             }
                             else if(body.devices.length > 0) {
-                                device_id = body.devices[0].id;
+                                device_id = ""
+
+                                for(var i = 0; i < body.devices.length; i++) {
+                                    if(body.devices[i].name === player_device_name && body.devices[i].type === player_device_type) {
+                                        device_id = body.devices[i].id;
+                                    }
+                                }
                                 console.log("Device ID: " + device_id);
                                 console.log("Playlist ID: " + playlist_to_play);
                                 var options = {
