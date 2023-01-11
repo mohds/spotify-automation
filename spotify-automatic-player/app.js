@@ -229,7 +229,7 @@ function mainloop(options, access_token) {
                         };
                         request.get(options, function(error, response, body) {
                             //console.log("Devices:");
-                            //console.log(body);
+                            console.log(body);
 
                             if(typeof body.devices === 'undefined') {
                                 console.log(body);
