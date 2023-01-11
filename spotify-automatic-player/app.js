@@ -140,6 +140,7 @@ function mainloop(options, access_token) {
             console.log("Program is running...");
             console.log("Morning hour: " + morning_hour);
             console.log("Evening hour: " + evening_hour);
+	    console.log("Night hour: " + night_hour);
             console.log("Current hour: " + current_hour);
 
             // debugging
@@ -225,7 +226,10 @@ function mainloop(options, access_token) {
                             //console.log("Devices:");
                             //console.log(body);
 
-                            if(body.devices.length > 0) {
+                            if(typeof body.devices === 'undefined') {
+                                console.log(body);
+                            }
+                            else if(body.devices.length > 0) {
                                 device_id = body.devices[0].id;
                                 console.log("Device ID: " + device_id);
                                 console.log("Playlist ID: " + playlist_to_play);
