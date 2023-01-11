@@ -3,18 +3,18 @@
 	{
 		"morning": 
 		{
-			"hour": 7,
-			"playlist-name": "morning-playlist"
+			"hour": 6,
+			"playlist-name": "Morning Playlist"
 		},
 		"evening": 
 		{
 			"hour": 12,
-			"playlist-name": "evening-playlist"
+			"playlist-name": "Afternoon Playlist"
 		},
 		"night": 
 		{
-			"hour": 19,
-			"playlist-name": "night-playlist"
+			"hour": 18,
+			"playlist-name": "Night Playlist"
 		}
 	}
 }
