@@ -197,6 +197,9 @@ function mainloop(options, access_token) {
                     if(typeof body === 'undefined') {
                         console.log("Undefined playlists response");
                     }
+                    else if(type of body.items === 'undefined') {
+                        console.log("Undefined playlists body");
+                    }
                     else {
                         playlists = body.items;
                         var evening_playlist_id = "";
