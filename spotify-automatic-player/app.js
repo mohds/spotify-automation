@@ -156,7 +156,7 @@ function mainloop(options, access_token) {
             var is_playing = false;
             var playlist_playing = '';
             options = {
-              url: 'https://api.spotify.com/v1/me/player',
+              url: 'https://api.spotify.com/v1/me/player/currently-playing',
               headers: { 'Authorization': 'Bearer ' + access_token },
               json: true,
             };
@@ -168,7 +168,7 @@ function mainloop(options, access_token) {
                     }
                     is_playing = body.is_playing;
                     console.log("Is playing: " + is_playing);
-                    if(is_playing && body.context !== null) {
+                    if(is_playing && body.context != null) {
                         playlist_playing = body.context.uri;
                         console.log("Playlist playing: " + playlist_playing);
                     }
@@ -197,7 +197,7 @@ function mainloop(options, access_token) {
                     if(typeof body === 'undefined') {
                         console.log("Undefined playlists response");
                     }
-                    else if(type of body.items === 'undefined') {
+                    else if(typeof body.items === 'undefined') {
                         console.log("Undefined playlists body");
                     }
                     else {
